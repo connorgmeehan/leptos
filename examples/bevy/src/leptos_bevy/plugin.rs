@@ -1,13 +1,13 @@
 use any_spawner::Executor;
 use bevy::{
-    app::Plugin, core::Name, ecs::{component::Component, entity::Entity, world::World}, utils::HashMap
+    app::Plugin,
+    core::Name,
+    ecs::{component::Component, entity::Entity, world::World},
+    utils::HashMap,
 };
 use leptos::{reactive_graph::owner::Owner, tachys::view::Render};
 
-use super::{
-    renderer::{set_bevy_world_ref, unset_bevy_world_ref, LeptosBevy},
-    root,
-};
+use super::{leptos_root, core::renderer::{set_bevy_world_ref, unset_bevy_world_ref, BevyRenderer}};
 
 pub struct LeptosPlugin;
 
@@ -34,21 +34,21 @@ struct BevyLeptosData {
 }
 
 pub trait LeptosWorldExt {
-    fn spawn_leptos<TElement: Render<LeptosBevy>, TRoot: Fn() -> TElement>(
+    fn spawn_leptos<TElement: Render<BevyRenderer>, TRoot: Fn() -> TElement>(
         &mut self,
         app_root: TRoot,
     ) -> Entity;
 }
 
 impl LeptosWorldExt for World {
-    fn spawn_leptos<TElement: Render<LeptosBevy>, TRoot: Fn() -> TElement>(
+    fn spawn_leptos<TElement: Render<BevyRenderer>, TRoot: Fn() -> TElement>(
         &mut self,
         app_root: TRoot,
     ) -> Entity {
         set_bevy_world_ref(self);
         let owner = Owner::new();
         let view = owner.with(app_root);
-        let (entity, _mountable) = root(view);
+        let (entity, _mountable) = leptos_root(view);
         let mut res = self.non_send_resource_mut::<LeptosResource>();
         res.roots.insert(
             entity,

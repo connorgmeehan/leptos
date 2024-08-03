@@ -1,15 +1,9 @@
-use std::marker::PhantomData;
-
-use bevy::ecs::{
-    component::{Component, ComponentId},
-    entity::Entity,
-};
+use bevy::ecs::{component::Component, entity::Entity};
 use leptos::tachys::view::Render;
 use next_tuple::NextTuple;
 
 use super::{
-    renderer::{with_world_and_nodes, LeptosBevy, LeptosNodeId},
-    BevyElement,
+    elements::BevyElement, node::LeptosNodeId, renderer::{with_world_and_nodes, BevyRenderer}
 };
 
 // GENERAL BOILERPLATE
@@ -109,9 +103,9 @@ impl<C: Component> Property for LComp<C> {
 
     fn rebuild(self, element: &LeptosNodeId, _state: &mut Self::State) {
         with_world_and_nodes(|world, node_map| {
-            let node = node_map.get(element).expect(
-                "Property::<C: Component>::rebuild() but no node.",
-            );
+            let node = node_map
+                .get(element)
+                .expect("Property::<C: Component>::rebuild() but no node.");
             let mut entity_mut = world.entity_mut(*node.entity());
             entity_mut.insert(self.component);
             LCompState
@@ -134,9 +128,9 @@ impl<C: Component> Property for LConditionalComp<C> {
     fn build(self, element: &LeptosNodeId) -> Self::State {
         with_world_and_nodes(|world, node_map| match self.component {
             Some(component) => {
-                let node = node_map.get(element).expect(
-                    "Property::<C: Component>::build() but no node.",
-                );
+                let node = node_map
+                    .get(element)
+                    .expect("Property::<C: Component>::build() but no node.");
                 let mut entity_mut = world.entity_mut(*node.entity());
                 entity_mut.insert(component);
 
@@ -185,7 +179,7 @@ impl<C: Component> Property for LConditionalComp<C> {
 impl<TProps, TChildren> BevyElement<Entity, TProps, TChildren>
 where
     TProps: NextTuple,
-    TChildren: Render<LeptosBevy>,
+    TChildren: Render<BevyRenderer>,
 {
     pub fn component<C: Component>(
         self,
@@ -206,16 +200,18 @@ where
     pub fn opt_component<C: Component>(
         self,
         value: Option<C>,
-    ) -> BevyElement<Entity, TProps::Output<LConditionalComp<C>>, TChildren> {
-    let BevyElement {
-        ty,
-        properties,
-        children,
-    } = self;
-    BevyElement {
-        ty,
-        properties: properties.next_tuple(LConditionalComp { component: value }),
-        children,
+    ) -> BevyElement<Entity, TProps::Output<LConditionalComp<C>>, TChildren>
+    {
+        let BevyElement {
+            ty,
+            properties,
+            children,
+        } = self;
+        BevyElement {
+            ty,
+            properties: properties
+                .next_tuple(LConditionalComp { component: value }),
+            children,
+        }
     }
-}
 }
