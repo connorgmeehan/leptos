@@ -1,0 +1,39 @@
+[package]
+name = "bevy"
+edition = "2021"
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+# This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
+# xbuild also uses this profile for building android AABs because I couldn't find a configuration for it
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
+# Profile for distribution
+[profile.dist]
+inherits = "release"
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[features]
+default = ["minimal_bevy"]
+minimal_bevy = ["bevy/bevy_state", "bevy/bevy_render", "bevy/bevy_scene", "bevy/bevy_sprite", "bevy/bevy_winit", "bevy/serialize", "bevy/webgl2", "bevy/bevy_ui"]
+
+[dependencies]
+leptos = { path = "../../leptos", features = ["csr"] }
+throw_error = { path = "../../any_error/" }
+any_spawner = { path = "../../any_spawner/" }
+next_tuple = { path = "../../next_tuple/" }
+bevy = { version = "0.14", default-features = false }
+thread_local = "1.1.8"
+paste = "1.0.14"
+bevy-inspector-egui = "0.25.1"

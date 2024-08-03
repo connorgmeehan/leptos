@@ -1,69 +1,46 @@
-#[cfg(feature = "gtk")]
 use gtk::{
     glib::Value, prelude::*, Application, ApplicationWindow, Orientation,
     Widget,
 };
-#[cfg(feature = "wasm")]
-use leptos::tachys::{dom::body, html::element, html::event as ev};
 use leptos::{
     logging,
     prelude::*,
     reactive_graph::{effect::Effect, owner::Owner, signal::RwSignal},
     Executor, For, ForProps,
 };
-#[cfg(feature = "gtk")]
 use leptos_gtk::{Element, LGtkWidget, LeptosGtk};
 use std::{mem, thread, time::Duration};
-#[cfg(feature = "gtk")]
 mod leptos_gtk;
 
 const APP_ID: &str = "dev.leptos.Counter";
 
 // Basic GTK app setup from https://gtk-rs.org/gtk4-rs/stable/latest/book/hello_world.html
 fn main() {
-    // use the glib event loop to power the reactive system
-    #[cfg(feature = "gtk")]
-    {
-        _ = Executor::init_glib();
-        let app = Application::builder().application_id(APP_ID).build();
+    _ = Executor::init_glib();
+    let app = Application::builder().application_id(APP_ID).build();
 
-        app.connect_startup(|_| load_css());
+    app.connect_startup(|_| load_css());
 
-        app.connect_activate(|app| {
-            // Connect to "activate" signal of `app`
-            let owner = Owner::new();
-            let view = owner.with(ui);
-            let (root, state) = leptos_gtk::root(view);
-
-            let window = ApplicationWindow::builder()
-                .application(app)
-                .title("TachyGTK")
-                .child(&root)
-                .build();
-            // Present window
-            window.present();
-            mem::forget((owner, state));
-        });
-
-        app.run();
-    }
-
-    #[cfg(all(feature = "wasm", not(feature = "gtk")))]
-    {
-        console_error_panic_hook::set_once();
-        _ = Executor::init_wasm_bindgen();
+    app.connect_activate(|app| {
+        // Connect to "activate" signal of `app`
         let owner = Owner::new();
         let view = owner.with(ui);
-        let mut state = view.build();
-        state.mount(&body().into(), None);
+        let (root, state) = leptos_gtk::root(view);
+
+        let window = ApplicationWindow::builder()
+            .application(app)
+            .title("TachyGTK")
+            .child(&root)
+            .build();
+        // Present window
+        window.present();
         mem::forget((owner, state));
-    }
+    });
+
+    app.run();
 }
 
-#[cfg(feature = "gtk")]
 type Rndr = LeptosGtk;
-#[cfg(all(feature = "wasm", not(feature = "gtk")))]
-type Rndr = Dom;
 
 fn ui() -> impl Render<Rndr> {
     let value = RwSignal::new(0);
@@ -71,13 +48,6 @@ fn ui() -> impl Render<Rndr> {
 
     Effect::new(move |_| {
         logging::log!("value = {}", value.get());
-    });
-
-    // just an example of multithreaded reactivity
-    #[cfg(feature = "gtk")]
-    thread::spawn(move || loop {
-        thread::sleep(Duration::from_millis(250));
-        value.update(|n| *n += 1);
     });
 
     vstack((
@@ -103,63 +73,29 @@ fn button(
     label: impl Render<Rndr>,
     callback: impl Fn() + Send + Sync + 'static,
 ) -> impl Render<Rndr> {
-    #[cfg(feature = "gtk")]
-    {
-        leptos_gtk::button()
-            .child(label)
-            .connect("clicked", move |_| {
-                callback();
-                None
-            })
-    }
-    #[cfg(all(feature = "wasm", not(feature = "gtk")))]
-    {
-        element::button()
-            .on(ev::click, move |_| callback())
-            .child(label)
-    }
+    leptos_gtk::button()
+        .child(label)
+        .connect("clicked", move |_| {
+            callback();
+            None
+        })
 }
 
 fn vstack(children: impl Render<Rndr>) -> impl Render<Rndr> {
-    #[cfg(feature = "gtk")]
-    {
-        leptos_gtk::r#box()
-            .orientation(Orientation::Vertical)
-            .spacing(12)
-            .child(children)
-    }
-    #[cfg(all(feature = "wasm", not(feature = "gtk")))]
-    {
-        element::div()
-            .style(("display", "flex"))
-            .style(("flex-direction", "column"))
-            .style(("align-items", "center"))
-            .style(("justify-content", "center"))
-            .style(("margin", "1rem"))
-            .child(children)
-    }
+    leptos_gtk::r#box()
+        .orientation(Orientation::Vertical)
+        .spacing(12)
+        .child(children)
 }
 
 fn hstack(children: impl Render<Rndr>) -> impl Render<Rndr> {
-    #[cfg(feature = "gtk")]
-    {
-        leptos_gtk::r#box()
-            .orientation(Orientation::Horizontal)
-            .spacing(12)
-            .child(children)
-    }
-    #[cfg(all(feature = "wasm", not(feature = "gtk")))]
-    {
-        element::div()
-            .style(("display", "flex"))
-            .style(("align-items", "center"))
-            .style(("justify-content", "center"))
-            .style(("margin", "1rem"))
-            .child(children)
-    }
+    let v = leptos_gtk::r#box()
+        .orientation(Orientation::Horizontal)
+        .spacing(12)
+        .child(children);
+    v
 }
 
-#[cfg(feature = "gtk")]
 fn load_css() {
     use gtk::{gdk::Display, CssProvider};
 
