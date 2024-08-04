@@ -30,8 +30,10 @@ pub struct AnyView<R>
 where
     R: Renderer,
 {
-    type_id: TypeId,
-    value: Box<dyn Any + Send>,
+    /// TODO: Document
+    pub type_id: TypeId,
+    /// TODO: Document
+    pub value: Box<dyn Any + Send>,
 
     // The fields below are cfg-gated so they will not be included in WASM bundles if not needed.
     // Ordinarily, the compiler can simply omit this dead code because the methods are not called.
@@ -47,8 +49,10 @@ where
     #[cfg(feature = "ssr")]
     to_html_async_ooo:
         fn(Box<dyn Any>, &mut StreamBuilder, &mut Position, bool, bool),
-    build: fn(Box<dyn Any>) -> AnyViewState<R>,
-    rebuild: fn(TypeId, Box<dyn Any>, &mut AnyViewState<R>),
+    /// TODO: Document
+    pub build: fn(Box<dyn Any>) -> AnyViewState<R>,
+    /// TODO: Document
+    pub rebuild: fn(TypeId, Box<dyn Any>, &mut AnyViewState<R>),
     #[cfg(feature = "ssr")]
     #[allow(clippy::type_complexity)]
     resolve:
@@ -67,12 +71,18 @@ pub struct AnyViewState<R>
 where
     R: Renderer,
 {
-    type_id: TypeId,
-    state: Box<dyn Any>,
-    unmount: fn(&mut dyn Any),
-    mount: fn(&mut dyn Any, parent: &R::Element, marker: Option<&R::Node>),
-    insert_before_this: fn(&dyn Any, child: &mut dyn Mountable<R>) -> bool,
-    rndr: PhantomData<R>,
+    /// TODO: Document
+    pub type_id: TypeId,
+    /// TODO: Document
+    pub state: Box<dyn Any>,
+    /// TODO: Document
+    pub unmount: fn(&mut dyn Any),
+    /// TODO: Document
+    pub mount: fn(&mut dyn Any, parent: &R::Element, marker: Option<&R::Node>),
+    /// TODO: Document
+    pub insert_before_this: fn(&dyn Any, child: &mut dyn Mountable<R>) -> bool,
+    /// TODO: Document
+    pub rndr: PhantomData<R>,
 }
 
 impl<R> Debug for AnyViewState<R>
@@ -100,7 +110,8 @@ where
     fn into_any(self) -> AnyView<R>;
 }
 
-fn mount_any<R, T>(
+/// TODO: Document
+pub fn mount_any<R, T>(
     state: &mut dyn Any,
     parent: &R::Element,
     marker: Option<&R::Node>,
@@ -115,7 +126,8 @@ fn mount_any<R, T>(
     state.mount(parent, marker)
 }
 
-fn unmount_any<R, T>(state: &mut dyn Any)
+/// TODO: Document
+pub fn unmount_any<R, T>(state: &mut dyn Any)
 where
     T: Render<R>,
     T::State: 'static,
@@ -127,7 +139,8 @@ where
     state.unmount();
 }
 
-fn insert_before_this<R, T>(
+/// TODO: Document
+pub fn insert_before_this<R, T>(
     state: &dyn Any,
     child: &mut dyn Mountable<R>,
 ) -> bool

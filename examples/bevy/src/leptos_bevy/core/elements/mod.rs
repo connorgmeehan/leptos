@@ -20,7 +20,7 @@ impl<TElement, TProps, TChildren> BevyElement<TElement, TProps, TChildren>
 where
     TChildren: NextTuple,
 {
-    pub fn child<T>(
+    pub fn children<T>(
         self,
         child: T,
     ) -> BevyElement<TElement, TProps, TChildren::Output<T>> {

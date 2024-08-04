@@ -5,9 +5,19 @@ use bevy::{
     ecs::{component::Component, entity::Entity, world::World},
     utils::HashMap,
 };
-use leptos::{reactive_graph::owner::Owner, tachys::view::Render};
+use leptos::{
+    context::provide_context, reactive_graph::owner::Owner, tachys::view::{Mountable, Render}
+};
 
-use super::{leptos_root, core::renderer::{set_bevy_world_ref, unset_bevy_world_ref, BevyRenderer}};
+use super::{
+    core::{
+        renderer::{
+            set_bevy_world_ref, unset_bevy_world_ref, with_nodes, BevyRenderer,
+        },
+        view::IntoBevyView, BevyLeptosContext,
+    },
+    entity,
+};
 
 pub struct LeptosPlugin;
 
@@ -33,22 +43,33 @@ struct BevyLeptosData {
     entity: Entity,
 }
 
+pub fn leptos_root(
+    app_fn: impl IntoBevyView,
+) -> (Entity, impl Mountable<BevyRenderer>) {
+    let ctx = BevyLeptosContext::new();
+    provide_context(ctx);
+
+    let view = app_fn.into_view();
+    let state = entity().children(view).build();
+
+    let entity = with_nodes(|node_map| {
+        *node_map
+            .get(&state.node)
+            .expect("root(). Could not get the node (that I just created).")
+            .entity()
+    });
+    (entity, state)
+}
+
 pub trait LeptosWorldExt {
-    fn spawn_leptos<TElement: Render<BevyRenderer>, TRoot: Fn() -> TElement>(
-        &mut self,
-        app_root: TRoot,
-    ) -> Entity;
+    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView) -> Entity;
 }
 
 impl LeptosWorldExt for World {
-    fn spawn_leptos<TElement: Render<BevyRenderer>, TRoot: Fn() -> TElement>(
-        &mut self,
-        app_root: TRoot,
-    ) -> Entity {
+    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView) -> Entity {
         set_bevy_world_ref(self);
         let owner = Owner::new();
-        let view = owner.with(app_root);
-        let (entity, _mountable) = leptos_root(view);
+        let (entity, _mountable) = owner.with(|| leptos_root(app_fn));
         let mut res = self.non_send_resource_mut::<LeptosResource>();
         res.roots.insert(
             entity,

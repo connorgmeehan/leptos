@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
 use bevy::ecs::entity::Entity;
-use leptos::tachys::view::{Mountable, Render};
+use leptos::{children::TypedChildren, tachys::view::{Mountable, Render}};
 
-use self::core::{elements::BevyElement, renderer::{with_nodes, BevyRenderer}};
+use self::core::{elements::BevyElement, renderer::{with_nodes, BevyRenderer}, view::IntoBevyView};
 
 pub mod core;
 pub mod plugin;
@@ -17,18 +17,3 @@ pub fn entity() -> BevyElement<Entity, (), ()> {
     }
 }
 
-pub fn leptos_root<TChildren>(
-    children: TChildren,
-) -> (Entity, impl Mountable<BevyRenderer>)
-where
-    TChildren: Render<BevyRenderer>,
-{
-    let state = entity().child(children).build();
-    let entity = with_nodes(|node_map| {
-        *node_map
-            .get(&state.node)
-            .expect("root(). Could not get the node (that I just created).")
-            .entity()
-    });
-    (entity, state)
-}

@@ -8,8 +8,7 @@ use leptos::{
     tachys::view::Render,
 };
 use leptos_bevy::{
-    entity,
-    plugin::{LeptosPlugin, LeptosWorldExt},
+    core::{renderer::BevyRenderer, use_bevy, view::IntoBevyView}, entity, plugin::{LeptosPlugin, LeptosWorldExt}
 };
 
 fn main() {
@@ -47,14 +46,10 @@ fn setup_leptos(world: &mut World) {
     world.spawn_leptos(app);
 }
 
-fn app() -> impl Render<leptos_bevy::core::renderer::BevyRenderer> {
-    let value = RwSignal::new(0);
-    Effect::new(move |_| {
-        let v = value.get();
-        info!("value = {}", v);
-    });
+fn app() -> impl IntoBevyView {
+    let ctx = use_bevy();
 
     entity()
-        .component(Name::from("App"))
+        .component(Name::from(format!("App {}", ctx.get().value)))
         .component(Visibility::default())
 }
