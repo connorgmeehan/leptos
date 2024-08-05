@@ -11,7 +11,7 @@ use leptos::tachys::{
     view::Mountable,
 };
 
-use super::renderer::{with_nodes, with_world_and_nodes, BevyRenderer};
+use super::renderer::{with_nodes_mut, with_world_and_nodes, BevyRenderer};
 
 /// Nodes in leptos are a simple usize ID, this map relates them to entities within
 /// the bevy world.
@@ -180,7 +180,7 @@ impl Mountable<BevyRenderer> for LeptosNodeId {
         &self,
         child: &mut dyn Mountable<BevyRenderer>,
     ) -> bool {
-        let parent_id = with_nodes(|node_map| {
+        let parent_id = with_nodes_mut(|node_map| {
             node_map.get(self).expect("Mountable::insert_before_this(). Tried to get BevyNode for LeptosNodeId {self:?} but it doesn't exist.").parent
         });
         let Some(parent_id) = parent_id else {

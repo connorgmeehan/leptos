@@ -12,7 +12,7 @@ use leptos::{
 use super::{
     core::{
         renderer::{
-            set_bevy_world_ref, unset_bevy_world_ref, with_nodes, BevyRenderer,
+            set_bevy_world_ref, unset_bevy_world_ref, with_nodes_mut, BevyRenderer,
         },
         view::IntoBevyView, BevyLeptosContext,
     },
@@ -52,7 +52,7 @@ pub fn leptos_root(
     let view = app_fn.into_view();
     let state = entity().children(view).build();
 
-    let entity = with_nodes(|node_map| {
+    let entity = with_nodes_mut(|node_map| {
         *node_map
             .get(&state.node)
             .expect("root(). Could not get the node (that I just created).")

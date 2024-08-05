@@ -1,6 +1,6 @@
 //!
 
-use std::{cell::RefCell, ops::DerefMut};
+use std::{borrow::Borrow, cell::RefCell, ops::DerefMut};
 
 use bevy::ecs::world::World;
 use leptos::tachys::renderer::Renderer;
@@ -31,7 +31,19 @@ pub(crate) fn unset_bevy_world_ref() {
     })
 }
 
-pub(crate) fn with_world<U, F>(with_fn: F) -> U
+pub(crate) fn with_world_ref<U, F>(with_fn: F) -> U
+where
+    F: FnOnce(&World) -> U,
+{
+    BEVY_WORLD.with(|v| {
+        let v = v.borrow();
+        let v = v.as_deref();
+        let result = v.map(with_fn);
+        return result.unwrap();
+    })
+}
+
+pub(crate) fn with_world_mut<U, F>(with_fn: F) -> U
 where
     F: FnOnce(&mut World) -> U,
 {
@@ -43,7 +55,7 @@ where
     })
 }
 
-pub(crate) fn with_nodes<U, F>(with_fn: F) -> U
+pub(crate) fn with_nodes_mut<U, F>(with_fn: F) -> U
 where
     F: FnOnce(&mut LeptosNodeMap) -> U,
 {
@@ -59,7 +71,7 @@ pub(crate) fn with_world_and_nodes<U, F>(with_fn: F) -> U
 where
     F: FnOnce(&mut World, &mut LeptosNodeMap) -> U,
 {
-    with_world(|world| with_nodes(|nodes| (with_fn)(world, nodes)))
+    with_world_mut(|world| with_nodes_mut(|nodes| (with_fn)(world, nodes)))
 }
 
 #[derive(Debug)]

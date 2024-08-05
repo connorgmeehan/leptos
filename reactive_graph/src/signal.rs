@@ -8,7 +8,7 @@ mod arc_write;
 pub mod guards;
 mod read;
 mod rw;
-mod subscriber_traits;
+pub mod subscriber_traits;
 mod write;
 
 use crate::owner::LocalStorage;

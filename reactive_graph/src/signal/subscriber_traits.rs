@@ -22,9 +22,12 @@ use std::{
     sync::{Arc, RwLock, Weak},
 };
 
-pub(crate) trait AsSubscriberSet {
+/// TODO document
+pub trait AsSubscriberSet {
+    /// TODO: Document
     type Output: Borrow<RwLock<SubscriberSet>>;
 
+    /// TODO: Document
     fn as_subscriber_set(&self) -> Option<Self::Output>;
 }
 

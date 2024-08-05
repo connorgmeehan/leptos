@@ -10,31 +10,38 @@ use core::slice;
 use std::{mem, vec::IntoIter};
 
 #[derive(Default, Clone, Debug)]
+/// TODO document
 pub struct SourceSet(Vec<AnySource>);
 
 impl SourceSet {
+    /// TODO document
     pub fn new() -> Self {
         Self(Default::default())
     }
 
+    /// TODO document
     pub fn insert(&mut self, source: AnySource) {
         self.0.push(source);
     }
 
+    /// TODO document
     pub fn remove(&mut self, source: &AnySource) {
         if let Some(pos) = self.0.iter().position(|s| s == source) {
             self.0.remove(pos);
         }
     }
 
+    /// TODO document
     pub fn take(&mut self) -> Vec<AnySource> {
         mem::take(&mut self.0)
     }
 
+    /// TODO document
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// TODO document
     pub fn clear_sources(&mut self, subscriber: &AnySubscriber) {
         for source in self.take() {
             source.remove_subscriber(subscriber);
@@ -60,19 +67,23 @@ impl<'a> IntoIterator for &'a SourceSet {
     }
 }
 #[derive(Default, Clone)]
+/// TODO document
 pub struct SubscriberSet(Vec<AnySubscriber>);
 
 impl SubscriberSet {
+    /// TODO document
     pub fn new() -> Self {
         Self(Vec::with_capacity(2))
     }
 
+    /// TODO document
     pub fn subscribe(&mut self, subscriber: AnySubscriber) {
         if !self.0.contains(&subscriber) {
             self.0.push(subscriber);
         }
     }
 
+    /// TODO document
     pub fn unsubscribe(&mut self, subscriber: &AnySubscriber) {
         if let Some(pos) = self.0.iter().position(|s| s == subscriber) {
             // note: do not use `.swap_remove()` here.
@@ -86,10 +97,12 @@ impl SubscriberSet {
         }
     }
 
+    /// TODO document
     pub fn take(&mut self) -> Vec<AnySubscriber> {
         mem::take(&mut self.0)
     }
 
+    /// TODO document
     pub fn len(&self) -> usize {
         self.0.len()
     }
