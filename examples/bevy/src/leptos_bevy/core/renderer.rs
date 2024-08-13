@@ -2,7 +2,7 @@
 
 use std::{borrow::Borrow, cell::RefCell, ops::DerefMut};
 
-use bevy::ecs::world::World;
+use bevy::{ecs::world::World, log::info};
 use leptos::tachys::renderer::Renderer;
 
 use super::node::{BevyNode, LeptosNodeId, LeptosNodeMap, BEVY_NODES};
@@ -18,6 +18,7 @@ pub fn extend_lifetime<'a, T>(r: &'a mut T) -> &'static mut T {
     }
 }
 pub(crate) fn set_bevy_world_ref(world: &mut World) {
+    info!("set_bevy_world_ref");
     let static_world = extend_lifetime(world);
     BEVY_WORLD.with(|v: &RefCell<Option<&mut World>>| {
         let mut v = v.borrow_mut();
@@ -25,6 +26,7 @@ pub(crate) fn set_bevy_world_ref(world: &mut World) {
     })
 }
 pub(crate) fn unset_bevy_world_ref() {
+    info!("unset_bevy_world_ref");
     BEVY_WORLD.with(|v: &RefCell<Option<&mut World>>| {
         let mut v = v.borrow_mut();
         *v = None;
@@ -35,11 +37,10 @@ pub(crate) fn with_world_ref<U, F>(with_fn: F) -> U
 where
     F: FnOnce(&World) -> U,
 {
-    BEVY_WORLD.with(|v| {
-        let v = v.borrow();
-        let v = v.as_deref();
-        let result = v.map(with_fn);
-        return result.unwrap();
+    BEVY_WORLD.with(|world| {
+        let world = world.borrow();
+        let world = world.as_deref().expect("with_world: Could not get the `&World` from the static RefCell.  This means that this was called out of sync.");
+        (with_fn)(world)
     })
 }
 
@@ -47,11 +48,10 @@ pub(crate) fn with_world_mut<U, F>(with_fn: F) -> U
 where
     F: FnOnce(&mut World) -> U,
 {
-    BEVY_WORLD.with(|v| {
-        let mut v = v.borrow_mut();
-        let v = v.as_deref_mut();
-        let result = v.map(with_fn);
-        return result.unwrap();
+    BEVY_WORLD.with(|world| {
+        let mut world = world.borrow_mut();
+        let world = world.as_deref_mut().expect("with_world_mut: Could not get the `&mut World` from the static RefCell.  This means that this was called out of sync.");
+        (with_fn)(world)
     })
 }
 
@@ -62,8 +62,7 @@ where
     BEVY_NODES.with(|v| {
         let mut v = v.borrow_mut();
         let node_map = v.deref_mut();
-        let result = (with_fn)(node_map);
-        return result;
+        (with_fn)(node_map)
     })
 }
 

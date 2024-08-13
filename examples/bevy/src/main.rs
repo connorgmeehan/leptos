@@ -3,12 +3,9 @@ mod leptos_bevy;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use leptos::{
-    reactive_graph::{effect::Effect, signal::RwSignal, traits::Get},
-    tachys::view::Render,
-};
+use leptos::reactive_graph::traits::Get;
 use leptos_bevy::{
-    core::{renderer::BevyRenderer, use_bevy, view::IntoBevyView}, entity, plugin::{LeptosPlugin, LeptosWorldExt}
+    core::{elements::entity, use_bevy, view::IntoBevyView}, hooks::use_resource::use_resource, plugin::LeptosPlugin, world_ext::LeptosWorldExt
 };
 
 fn main() {
@@ -36,20 +33,27 @@ fn main() {
         )
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(LeptosPlugin)
+        .insert_resource(MyResource::default())
         .add_systems(Startup, setup_leptos)
+        .add_systems(Update, update_my_resource)
         .run();
 }
 
-const X_EXTENT: f32 = 900.;
+#[derive(Default, Resource, Clone)]
+pub struct MyResource(pub usize);
+
+pub fn update_my_resource(mut resource: ResMut<MyResource>) {
+    resource.0 += 1;
+}
 
 fn setup_leptos(world: &mut World) {
     world.spawn_leptos(app);
 }
 
 fn app() -> impl IntoBevyView {
-    let ctx = use_bevy();
+    let v = use_resource::<MyResource>();
 
     entity()
-        .component(Name::from(format!("App {}", ctx.get().value)))
+        .component(Name::from(format!("App {}", v.get().0)))
         .component(Visibility::default())
 }

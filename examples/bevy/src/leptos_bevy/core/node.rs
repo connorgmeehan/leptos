@@ -19,7 +19,7 @@ pub type LeptosNodeMap = HashMap<LeptosNodeId, BevyNode>;
 
 thread_local! {
     pub static BEVY_NODES: RefCell<LeptosNodeMap> = RefCell::new(LeptosNodeMap::new());
-    static NODE_ID_COUNTER: RefCell<usize> = RefCell::new(0);
+    static NODE_ID_COUNTER: RefCell<usize> = const { RefCell::new(0) };
 }
 pub fn get_next_node_id() -> LeptosNodeId {
     NODE_ID_COUNTER.with(|id| {
@@ -31,6 +31,8 @@ pub fn get_next_node_id() -> LeptosNodeId {
 
 #[derive(Debug, Component, Deref, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct LeptosNodeId(usize);
+
+#[allow(dead_code)]
 impl<'a> LeptosNodeId {
     pub fn node(&'a self, node_map: &'a mut LeptosNodeMap) -> &'a mut BevyNode {
         node_map.get_mut(self).expect("LeptosNodeId::node() Tried to get self {self:?} but no node in map.")
@@ -48,6 +50,8 @@ pub struct BevyNode {
     pub(crate) parent: Option<LeptosNodeId>,
     pub(crate) parent_entity: Option<Entity>,
 }
+
+#[allow(dead_code)]
 impl BevyNode {
     pub fn entity(&self) -> &Entity {
         &self.entity
@@ -58,7 +62,7 @@ impl BevyNode {
 
     pub fn spawn_new(world: &mut World, node_map: &mut LeptosNodeMap) -> Self {
         let node_id = get_next_node_id();
-        let entity = world.spawn(node_id.clone()).id();
+        let entity = world.spawn(node_id).id();
         let instance = Self {
             node_id,
             entity,

@@ -8,28 +8,37 @@ use std::{
 use bevy::{ecs::world::World, time::Time};
 
 use leptos::reactive_graph::{
-    graph::{ReactiveNode, SubscriberSet},
+    graph::SubscriberSet,
     signal::subscriber_traits::AsSubscriberSet,
     traits::{DefinedAt, IsDisposed, WithUntracked},
 };
 
 use crate::leptos_bevy::core::renderer::with_world_ref;
 
-pub struct BevyReadSignal<T, TGetter: for<'a> Fn(&'a World) -> Option<&'a T>> {
+use super::BevyReadSignalTrigger;
+
+pub struct BevyReadSignal<T> {
     #[cfg(debug_assertions)]
     pub defined_at: &'static Location<'static>,
-    pub getter: Arc<TGetter>,
+    pub getter: Arc<dyn for<'a> Fn(&'a World) -> Option<&'a T>>,
     pub inner: Arc<RwLock<SubscriberSet>>,
 }
 
-impl<T, TGetter: for<'a> Fn(&'a bevy::prelude::World) -> Option<&'a T>>
-    BevyReadSignal<T, TGetter>
-{
-    pub fn new(getter: TGetter) -> Self {
+impl<T> BevyReadSignal<T> {
+    pub fn new(
+        getter: impl for<'a> Fn(&'a World) -> Option<&'a T> + 'static,
+    ) -> Self {
         Self {
             defined_at: std::panic::Location::caller(),
             getter: Arc::new(getter),
             inner: Arc::new(RwLock::new(SubscriberSet::default())),
+        }
+    }
+
+    pub fn get_notifier(&self) -> BevyReadSignalTrigger {
+        BevyReadSignalTrigger {
+            defined_at: self.defined_at,
+            inner: self.inner.clone(),
         }
     }
 }
@@ -38,9 +47,7 @@ fn test() {
     let v = BevyReadSignal::new(|world| world.get_resource::<Time>());
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> Clone
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> Clone for BevyReadSignal<T> {
     #[track_caller]
     fn clone(&self) -> Self {
         Self {
@@ -52,9 +59,7 @@ impl<T, TGetter: Fn(&World) -> Option<&T>> Clone
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> Debug
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> Debug for BevyReadSignal<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         f.debug_struct("BevyReadSignal")
             .field("type", &std::any::type_name::<T>())
@@ -63,25 +68,21 @@ impl<T, TGetter: Fn(&World) -> Option<&T>> Debug
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> PartialEq
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> PartialEq for BevyReadSignal<T> {
     fn eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.getter, &other.getter)
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> Eq for BevyReadSignal<T, TGetter> {}
+impl<T> Eq for BevyReadSignal<T> {}
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> Hash for BevyReadSignal<T, TGetter> {
+impl<T> Hash for BevyReadSignal<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::ptr::hash(&Arc::as_ptr(&self.getter), state);
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> DefinedAt
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> DefinedAt for BevyReadSignal<T> {
     #[inline(always)]
     fn defined_at(&self) -> Option<&'static Location<'static>> {
         #[cfg(debug_assertions)]
@@ -95,18 +96,14 @@ impl<T, TGetter: Fn(&World) -> Option<&T>> DefinedAt
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> IsDisposed
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> IsDisposed for BevyReadSignal<T> {
     #[inline(always)]
     fn is_disposed(&self) -> bool {
         false
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> AsSubscriberSet
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> AsSubscriberSet for BevyReadSignal<T> {
     type Output = Arc<RwLock<SubscriberSet>>;
 
     #[inline(always)]
@@ -115,9 +112,7 @@ impl<T, TGetter: Fn(&World) -> Option<&T>> AsSubscriberSet
     }
 }
 
-impl<T, TGetter: Fn(&World) -> Option<&T>> WithUntracked
-    for BevyReadSignal<T, TGetter>
-{
+impl<T> WithUntracked for BevyReadSignal<T> {
     type Value = T;
 
     fn try_with_untracked<U>(

@@ -112,3 +112,13 @@ where
         self.node.insert_before_this(child)
     }
 }
+
+/// Spawns an entity and parents it to the parent element.
+pub fn entity() -> BevyElement<Entity, (), ()> {
+    BevyElement {
+        ty: PhantomData,
+        properties: (),
+        children: (),
+    }
+}
+
