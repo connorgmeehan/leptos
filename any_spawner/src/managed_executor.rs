@@ -2,7 +2,7 @@ use std::{
     cell::RefCell,
     collections::VecDeque,
     sync::Arc,
-    task::{Context, Poll, RawWakerVTable, Wake, Waker},
+    task::{Context, Poll, Wake},
 };
 
 use futures::FutureExt;
