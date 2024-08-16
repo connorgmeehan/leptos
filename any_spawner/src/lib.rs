@@ -32,6 +32,9 @@
 use std::{future::Future, pin::Pin, sync::OnceLock};
 use thiserror::Error;
 
+#[cfg(feature = "managed-executor")]
+mod managed_executor;
+
 pub(crate) type PinnedFuture<T> = Pin<Box<dyn Future<Output = T> + Send>>;
 pub(crate) type PinnedLocalFuture<T> = Pin<Box<dyn Future<Output = T>>>;
 
@@ -225,6 +228,38 @@ impl Executor {
             })
             .map_err(|_| ExecutorError::AlreadySet)?;
         Ok(())
+    }
+
+    /// Uses a simple que to manage async tasks.  Tasks can be executed when you like.
+    ///
+    /// You will have to manually start executing the tasks by importing ManagedExecutor 
+    /// and running them.
+    ///
+    /// Requires the `managed-executor` feature to be activated on this crate.
+    #[cfg(feature = "managed-executor")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "managed-executor")))]
+    pub fn init_managed_executor() -> Result<(), ExecutorError> {
+        use managed_executor::ManagedExecutor;
+        SPAWN
+            .set(|fut| {
+                ManagedExecutor::spawn(fut);
+            })
+            .map_err(|_| ExecutorError::AlreadySet)?;
+        SPAWN_LOCAL
+            .set(|fut| {
+                ManagedExecutor::spawn_local(fut);
+            })
+            .map_err(|_| ExecutorError::AlreadySet)?;
+        Ok(())
+    }
+
+    /// Provides access to the managed executor which will let you flush all effects syncronously.
+    ///
+    /// Requires the `managed-executor` feature to be activated on this crate.
+    #[cfg(feature = "managed-executor")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "managed-executor")))]
+    pub fn flush_managed_executor() {
+        managed_executor::ManagedExecutor::flush();
     }
 }
 
