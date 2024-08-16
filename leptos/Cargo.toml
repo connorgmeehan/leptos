@@ -84,7 +84,6 @@ trace-component-props = [
   "leptos_macro/trace-component-props",
 ]
 delegation = ["tachys/delegation"]
-managed-executor = ["any_spawner/managed-executor"]
 
 [package.metadata.cargo-all-features]
 denylist = [

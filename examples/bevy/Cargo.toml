@@ -29,7 +29,7 @@ default = ["minimal_bevy"]
 minimal_bevy = ["bevy/bevy_state", "bevy/bevy_render", "bevy/bevy_scene", "bevy/bevy_sprite", "bevy/bevy_winit", "bevy/serialize", "bevy/webgl2", "bevy/bevy_ui"]
 
 [dependencies]
-leptos = { path = "../../leptos", features = ["csr", "managed-executor"] }
+leptos = { path = "../../leptos", features = ["csr"] }
 throw_error = { path = "../../any_error/" }
 any_spawner = { path = "../../any_spawner/" }
 next_tuple = { path = "../../next_tuple/" }

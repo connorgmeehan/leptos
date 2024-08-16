@@ -24,7 +24,6 @@ tokio = ["dep:tokio"]
 glib = ["dep:glib"]
 wasm-bindgen = ["dep:wasm-bindgen-futures"]
 futures-executor = ["futures/thread-pool", "futures/executor"]
-managed-executor = []
 
 [package.metadata.docs.rs]
 all-features = true

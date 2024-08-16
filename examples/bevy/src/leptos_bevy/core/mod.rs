@@ -25,6 +25,7 @@ pub mod provider;
 pub mod renderer;
 pub mod signals;
 pub mod view;
+pub mod executor;
 
 #[derive(Clone, Default)]
 pub struct BevyLeptosState {

@@ -4,7 +4,7 @@ use bevy::{
 };
 
 use super::{
-    core::{renderer::{set_bevy_world_ref, unset_bevy_world_ref}, BevyLeptosState},
+    core::{executor::BevyLeptosExecutor, renderer::{set_bevy_world_ref, unset_bevy_world_ref}, BevyLeptosState},
     world_ext::BevyLeptosData,
 };
 
@@ -12,7 +12,10 @@ pub struct LeptosPlugin;
 
 impl Plugin for LeptosPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        _ = Executor::init_managed_executor();
+        _ = Executor::init_any(
+            BevyLeptosExecutor::spawn,
+            BevyLeptosExecutor::spawn_local,
+        );
 
         app.insert_non_send_resource(LeptosResource::default());
         app.add_systems(
@@ -32,6 +35,6 @@ pub fn update_leptos(world: &mut World) {
     BevyLeptosState::sys_notify_tracked_resources(world);
 
     set_bevy_world_ref(world);
-    Executor::flush_managed_executor();
+    BevyLeptosExecutor::flush();
     unset_bevy_world_ref()
 }
