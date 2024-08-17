@@ -3,7 +3,7 @@ mod leptos_bevy;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use leptos::reactive_graph::traits::Get;
+use leptos::reactive_graph::{effect::{create_effect, Effect}, signal::signal, traits::Get};
 use leptos_bevy::{
     core::{elements::entity, use_bevy, view::IntoBevyView}, hooks::use_resource::use_resource, plugin::LeptosPlugin, world_ext::LeptosWorldExt
 };
@@ -36,10 +36,11 @@ fn main() {
         .insert_resource(MyResource::default())
         .add_systems(Startup, setup_leptos)
         .add_systems(Update, update_my_resource)
+        .register_type::<MyResource>()
         .run();
 }
 
-#[derive(Default, Resource, Clone)]
+#[derive(Default, Resource, Clone, Debug, Reflect)]
 pub struct MyResource(pub usize);
 
 pub fn update_my_resource(mut resource: ResMut<MyResource>) {
@@ -51,6 +52,7 @@ fn setup_leptos(world: &mut World) {
 }
 
 fn app() -> impl IntoBevyView {
+    let (mysignal, set_mysignal) = signal(1);
     let v = use_resource::<MyResource>();
 
     entity()

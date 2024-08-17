@@ -1,11 +1,11 @@
+use any_spawner::{PinnedFuture, PinnedLocalFuture};
+use bevy::{log::info, tasks::futures_lite::FutureExt};
 use std::{
     cell::RefCell,
     collections::VecDeque,
     sync::Arc,
     task::{Context, Poll, Wake},
 };
-use any_spawner::{PinnedLocalFuture, PinnedFuture};
-use bevy::tasks::futures_lite::FutureExt;
 
 thread_local! {
     static LOCAL_FUTURES: RefCell<VecDeque<PinnedLocalFuture<()>>> = RefCell::new(VecDeque::new());
@@ -13,7 +13,6 @@ thread_local! {
 }
 
 pub struct BevyLeptosExecutor {}
-
 
 // Can be made more performant by using RawWaker
 // which doesn't require an allocation?
@@ -41,18 +40,25 @@ impl BevyLeptosExecutor {
         let waker = Arc::new(DummyWaker).into();
         let mut context = Context::from_waker(&waker);
 
-        while let Some(mut task) = FUTURES.with_borrow_mut(|f| f.pop_front()) {
-            println!("Polling future.");
+        let mut futures = FUTURES.with_borrow_mut(std::mem::take);
+        while let Some(mut task) = futures.pop_front() {
             match task.poll(&mut context) {
-                Poll::Ready(()) => {} // task done
+                Poll::Ready(()) => {
+                    println!("\tReady!")
+                } // task done
                 Poll::Pending => FUTURES.with_borrow_mut(|f| f.push_back(task)),
             }
         }
-        while let Some(mut task) = LOCAL_FUTURES.with_borrow_mut(|f| f.pop_front()) {
-            println!("Polling future.");
+
+        let mut local_futures = LOCAL_FUTURES.with_borrow_mut(std::mem::take);
+        while let Some(mut task) = local_futures.pop_front() {
             match task.poll(&mut context) {
-                Poll::Ready(()) => {} // task done
-                Poll::Pending => LOCAL_FUTURES.with_borrow_mut(|f| f.push_back(task)),
+                Poll::Ready(()) => {
+                    println!("\tReady!")
+                } // task done
+                Poll::Pending => {
+                    LOCAL_FUTURES.with_borrow_mut(|f| f.push_back(task))
+                }
             }
         }
     }

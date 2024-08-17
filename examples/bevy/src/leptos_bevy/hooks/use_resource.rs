@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy::ecs::{system::Resource, world::World};
-use leptos::reactive_graph::{owner::on_cleanup, traits::Set};
+use leptos::{reactive_graph::{owner::on_cleanup, traits::Set}, tachys::html::node_ref::node_ref};
 
 use crate::leptos_bevy::core::{
     signals::{BevyReadSignal, BevyReadSignalTrigger},
@@ -35,10 +35,10 @@ pub fn use_resource<R: Resource>() -> BevyReadSignal<R> {
                 } => {
                     leptos_bevy.untrack_resource::<R>(notifier);
                 }
-            }
+            };
+            println!("{leptos_bevy:?}");
         });
 
-    println!("use_resource<R>() on_mount");
     dispatch.set(UseResourceTrackersAction::TrackResource {
         notifier: signal.get_notifier(),
         pd: PhantomData::<R>,
@@ -46,7 +46,6 @@ pub fn use_resource<R: Resource>() -> BevyReadSignal<R> {
 
     let notifier = signal.get_notifier();
     on_cleanup(move || {
-        println!("use_resource<R>() on_cleanup");
         dispatch.set(UseResourceTrackersAction::UntrackResource {
             notifier,
             pd: PhantomData::<R>,

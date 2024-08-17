@@ -1,7 +1,9 @@
+use std::fmt::Debug;
+
 use bevy::{
     ecs::{component::ComponentId, system::Resource, world::World},
-    prelude::Deref,
-    utils::{HashMap, HashSet},
+    prelude::{Deref, DerefMut},
+    utils::{hashbrown::HashSet, HashMap},
 };
 use leptos::{
     context::use_context,
@@ -19,18 +21,42 @@ use super::plugin::LeptosResource;
 
 pub mod children;
 pub mod elements;
+pub mod executor;
 pub mod node;
 pub mod properties;
 pub mod provider;
 pub mod renderer;
 pub mod signals;
 pub mod view;
-pub mod executor;
 
 #[derive(Clone, Default)]
 pub struct BevyLeptosState {
-    pub resource_trackers:
-        HashMap<ComponentId, HashSet<BevyReadSignalTrigger>>,
+    pub resource_trackers: ResourceTrackers,
+}
+
+#[derive(Clone, Default, Deref, DerefMut)]
+pub struct ResourceTrackers(
+    HashMap<ComponentId, HashSet<BevyReadSignalTrigger>>,
+);
+
+impl Debug for ResourceTrackers {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map()
+            .entries(
+                self.0.iter().map(|(component_id, triggers)| {
+                    (component_id, triggers.len())
+                }),
+            )
+            .finish()
+    }
+}
+
+impl Debug for BevyLeptosState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BevyLeptosState")
+            .field("resource_trackers", &self.resource_trackers)
+            .finish()
+    }
 }
 
 #[allow(dead_code)]
@@ -65,19 +91,28 @@ impl BevyLeptosState {
         &mut self,
         notifier: BevyReadSignalTrigger,
     ) {
-        let resource_id = with_world_ref(|world| world.components().resource_id::<R>()).expect("BevyLeptosState::track_resource() Could not track resource as it hasn't been initialised within the world yet.");
+        let resource_id = with_world_ref(|world| 
+            world.components().resource_id::<R>()
+        ).expect("BevyLeptosState::track_resource() Could not track resource as it hasn't been initialised within the world yet.");
+
         let entry = self.resource_trackers.entry(resource_id);
         let notifiers = entry.or_default();
+        println!("Tracked resource {resource_id:?}");
         notifiers.insert(notifier);
     }
     pub fn untrack_resource<R: Resource>(
         &mut self,
         notifier: BevyReadSignalTrigger,
     ) -> bool {
-        let resource_id = with_world_ref(|world| world.components().resource_id::<R>()).expect("BevyLeptosState::track_resource() Could not track resource as it hasn't been initialised within the world yet.");
+        let resource_id = with_world_ref(|world| 
+            world.components().resource_id::<R>()
+        ).expect("BevyLeptosState::track_resource() Could not track resource as it hasn't been initialised within the world yet.");
+
         if let Some(notifiers) = self.resource_trackers.get_mut(&resource_id) {
+            println!("Untracked resource {resource_id:?}");
             notifiers.remove(&notifier)
         } else {
+            println!("No need to untrack resource {resource_id:?}");
             false
         }
     }

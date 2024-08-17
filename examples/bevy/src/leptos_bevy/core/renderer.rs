@@ -18,7 +18,6 @@ pub fn extend_lifetime<'a, T>(r: &'a mut T) -> &'static mut T {
     }
 }
 pub(crate) fn set_bevy_world_ref(world: &mut World) {
-    info!("set_bevy_world_ref");
     let static_world = extend_lifetime(world);
     BEVY_WORLD.with(|v: &RefCell<Option<&mut World>>| {
         let mut v = v.borrow_mut();
@@ -26,7 +25,6 @@ pub(crate) fn set_bevy_world_ref(world: &mut World) {
     })
 }
 pub(crate) fn unset_bevy_world_ref() {
-    info!("unset_bevy_world_ref");
     BEVY_WORLD.with(|v: &RefCell<Option<&mut World>>| {
         let mut v = v.borrow_mut();
         *v = None;

@@ -21,7 +21,7 @@ use super::{core::{
 #[allow(dead_code)]
 pub struct BevyLeptosData {
     pub(crate) owner: Owner,
-    // mountable: Box<dyn Mountable<LeptosBevy> +'static>,
+    mountable: Box<dyn Mountable<BevyRenderer>>,
     pub(crate) entity: Entity,
 
     pub(crate) context: BevyLeptosContext,
@@ -46,20 +46,20 @@ pub fn leptos_root(
 }
 
 pub trait LeptosWorldExt {
-    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView) -> Entity;
+    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView + 'static) -> Entity;
 }
 
 impl LeptosWorldExt for World {
-    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView) -> Entity {
+    fn spawn_leptos(&mut self, app_fn: impl IntoBevyView + 'static) -> Entity {
         set_bevy_world_ref(self);
         let owner = Owner::new();
-        let (entity, _mountable, context) = owner.with(|| leptos_root(app_fn));
+        let (entity, mountable, context) = owner.with(|| leptos_root(app_fn));
         let mut res = self.non_send_resource_mut::<LeptosResource>();
         res.roots.insert(
             entity,
             BevyLeptosData {
                 owner,
-                // mountable: Box::new(mountable),
+                mountable: Box::new(mountable),
                 entity,
                 context,
             },

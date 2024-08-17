@@ -31,7 +31,6 @@ pub struct LeptosResource {
 }
 
 pub fn update_leptos(world: &mut World) {
-    warn!("update_leptos");
     BevyLeptosState::sys_notify_tracked_resources(world);
 
     set_bevy_world_ref(world);
